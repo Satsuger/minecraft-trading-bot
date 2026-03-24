@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start:advisor": "tsx src/advisor.ts",
-    "start": "tsx src/index.ts",
+    "start:bot": "tsx src/index.ts",
     "check": "tsc --noEmit"
   },
   "dependencies": {

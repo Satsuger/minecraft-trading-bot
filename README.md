@@ -43,7 +43,28 @@ MC_PASSWORD=
 MC_VERSION=
 PRICE_KEYWORDS=price,sell,buy,shop,auction,market
 CHAT_COMMAND_PREFIX=!
+PRISMARINE_VIEWER_ENABLED=true
+PRISMARINE_VIEWER_PORT=3000
+PRISMARINE_VIEWER_FIRST_PERSON=false
+PRISMARINE_VIEWER_VIEW_DISTANCE=6
+PRISMARINE_VIEWER_PREFIX=
 ```
+
+## Prismarine Viewer
+When the bot spawns, it now starts a web viewer so you can inspect the world around it in real time.
+
+Open:
+
+`http://localhost:3000/`
+
+You can change the port and route prefix with:
+- `PRISMARINE_VIEWER_PORT`
+- `PRISMARINE_VIEWER_PREFIX`
+
+Useful options:
+- `PRISMARINE_VIEWER_ENABLED=false` to disable it
+- `PRISMARINE_VIEWER_FIRST_PERSON=true` for first-person camera mode
+- `PRISMARINE_VIEWER_VIEW_DISTANCE=8` to render more chunks around the bot
 
 ## Commands
 In chat:

@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@minecraft-trading-bot/shared": ["libs/shared/src/index.ts"]
+    }
+  }
+}

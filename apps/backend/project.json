@@ -1,0 +1,38 @@
+{
+  "name": "backend",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/backend/src",
+  "projectType": "application",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx watch apps/backend/src/main.ts",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "advisor": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx apps/backend/src/advisor.ts",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p apps/backend/tsconfig.app.json",
+        "cwd": "{workspaceRoot}"
+      },
+      "dependsOn": ["shared:build"]
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p apps/backend/tsconfig.app.json --noEmit",
+        "cwd": "{workspaceRoot}"
+      }
+    }
+  },
+  "tags": ["scope:backend", "type:app"]
+}

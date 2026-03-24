@@ -1,18 +1,20 @@
 import EventEmitter from "node:events";
-import { existsSync, mkdirSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import type { Bot } from "mineflayer";
 import type { Window } from "prismarine-windows";
-import { formatMinecraftText } from "./minecraftText.js";
+import type {
+  InventoryStatePayload,
+  SerializableItem,
+  SerializedWindow,
+} from "@minecraft-trading-bot/shared";
+import { formatMinecraftText } from "./minecraft-text.js";
 
 const require = createRequire(import.meta.url);
 
 const compression = require("compression") as any;
-const { build: buildFrontend } = require("esbuild") as {
-  build: (options: Record<string, unknown>) => Promise<void>;
-};
 const express = require("express") as any;
 const socketIo = require("socket.io") as any;
 const { WorldView } = require("prismarine-viewer/viewer/lib/worldView.js") as {
@@ -45,38 +47,6 @@ interface ViewerApi extends EventEmitter {
   erase: (id: string) => void;
 }
 
-interface SerializableItem {
-  count: number;
-  displayName: string;
-  durabilityUsed: number | null;
-  maxDurability: number | null;
-  metadata: number;
-  name: string;
-  slot: number;
-  stackSize: number | null;
-  type: number;
-}
-
-interface SerializedWindow {
-  hotbarStart: number;
-  id: number;
-  inventoryEnd: number;
-  inventoryStart: number;
-  selectedItem: SerializableItem | null;
-  slotCount: number;
-  slots: Array<SerializableItem | null>;
-  title: string;
-  type: number | string;
-}
-
-interface InventoryStatePayload {
-  currentWindow: SerializedWindow | null;
-  heldItem: SerializableItem | null;
-  inventory: SerializedWindow;
-  quickBarSlot: number | null;
-  username: string;
-}
-
 type BotWithViewer = Bot & { viewer?: ViewerApi };
 
 export interface PrismarineViewerController {
@@ -93,10 +63,11 @@ export async function startPrismarineViewer(
   const firstPerson = settings.firstPerson ?? false;
   const viewDistance = settings.viewDistance ?? 6;
   const dashboardPath = normalizedPrefix || "/";
+  const dashboardStaticPath = normalizedPrefix ? `${normalizedPrefix}/` : "/";
   const viewerPath = joinRoute(normalizedPrefix, "/viewer");
   const viewerSocketPath = `${viewerPath}/socket.io`;
-  const dashboardAssetPath = joinRoute(normalizedPrefix, "/dashboard-assets");
-  const dashboardBuildDir = join(process.cwd(), "data", "dashboard");
+  const frontendDistDir = join(process.cwd(), "dist", "apps", "frontend");
+  const frontendIndexPath = join(frontendDistDir, "index.html");
 
   const app = express();
   const httpServer = createServer(app);
@@ -110,23 +81,12 @@ export async function startPrismarineViewer(
     dirname(require.resolve("prismarine-viewer/package.json")),
     "public",
   );
-  await ensureDashboardBundle(dashboardBuildDir);
 
   let activeWindow: Window | null = bot.currentWindow;
   let activeWindowListener: (() => void) | undefined;
   const botRuntimeEvents = bot as unknown as EventEmitter;
 
   app.use(compression());
-  app.use(`${dashboardAssetPath}/`, express.static(dashboardBuildDir));
-  app.get(dashboardPath, (_request: unknown, response: any) => {
-    response.type("html").send(
-      renderDashboardHtml({
-        assetBasePath: dashboardAssetPath,
-        socketPath: viewerSocketPath,
-        viewerPath,
-      }),
-    );
-  });
 
   if (normalizedPrefix) {
     app.get(normalizedPrefix, (_request: unknown, response: any) => {
@@ -135,6 +95,20 @@ export async function startPrismarineViewer(
   }
 
   app.use(`${viewerPath}/`, express.static(publicDir));
+
+  if (existsSync(frontendIndexPath)) {
+    app.get(dashboardPath, (_request: unknown, response: any) => {
+      response.sendFile(frontendIndexPath);
+    });
+    app.use(dashboardStaticPath, express.static(frontendDistDir));
+  } else {
+    app.get(dashboardPath, (_request: unknown, response: any) => {
+      response
+        .status(503)
+        .type("html")
+        .send(renderDashboardUnavailableHtml(buildViewerUrl(port, normalizedPrefix)));
+    });
+  }
 
   viewer.erase = (id) => {
     delete primitives[id];
@@ -290,27 +264,6 @@ function buildViewerUrl(port: number, prefix: string): string {
   return `http://localhost:${port}${path}`;
 }
 
-async function ensureDashboardBundle(outdir: string): Promise<void> {
-  if (!existsSync(outdir)) {
-    mkdirSync(outdir, { recursive: true });
-  }
-
-  await buildFrontend({
-    absWorkingDir: process.cwd(),
-    bundle: true,
-    entryNames: "dashboard",
-    entryPoints: [join(process.cwd(), "src", "dashboard", "app.tsx")],
-    format: "esm",
-    loader: {
-      ".css": "css",
-    },
-    outdir,
-    platform: "browser",
-    target: ["es2022"],
-    write: true,
-  });
-}
-
 function createInventoryState(bot: Bot): InventoryStatePayload {
   return {
     currentWindow: serializeWindow(bot.currentWindow),
@@ -319,15 +272,6 @@ function createInventoryState(bot: Bot): InventoryStatePayload {
     quickBarSlot: bot.quickBarSlot,
     username: bot.username,
   };
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 }
 
 function joinRoute(prefix: string, suffix: string): string {
@@ -342,22 +286,8 @@ function normalizePrefix(prefix?: string): string {
   return prefix.startsWith("/") ? prefix : `/${prefix}`;
 }
 
-function renderDashboardHtml({
-  assetBasePath,
-  socketPath,
-  viewerPath,
-}: {
-  assetBasePath: string;
-  socketPath: string;
-  viewerPath: string;
-}): string {
-  const escapedSocketScriptPath = escapeHtml(`${socketPath}/socket.io.js`);
-  const escapedDashboardCssPath = escapeHtml(`${assetBasePath}/dashboard.css`);
-  const escapedDashboardJsPath = escapeHtml(`${assetBasePath}/dashboard.js`);
-  const dashboardConfigScript = JSON.stringify({
-    socketPath,
-    viewerPath: `${viewerPath}/`,
-  }).replaceAll("<", "\\u003c");
+function renderDashboardUnavailableHtml(viewerUrl: string): string {
+  const escapedViewerUrl = escapeHtml(viewerUrl);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -365,15 +295,52 @@ function renderDashboardHtml({
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Minecraft Bot Dashboard</title>
-    <link rel="stylesheet" href="${escapedDashboardCssPath}" />
+    <style>
+      body {
+        background: #0f171b;
+        color: #eef5ef;
+        font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+
+      main {
+        background: rgba(17, 27, 32, 0.94);
+        border: 1px solid rgba(92, 126, 119, 0.26);
+        border-radius: 24px;
+        max-width: 720px;
+        padding: 24px;
+      }
+
+      code {
+        color: #d7ff7b;
+      }
+
+      a {
+        color: #9bd66f;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script>window.__MC_DASHBOARD__ = ${dashboardConfigScript};</script>
-    <script src="${escapedSocketScriptPath}"></script>
-    <script type="module" src="${escapedDashboardJsPath}"></script>
+    <main>
+      <h1>Frontend assets are not built yet.</h1>
+      <p>Run <code>npm run build</code> or keep <code>npm run dev:frontend</code> running during development.</p>
+      <p>The raw Prismarine viewer is still available at <a href="${escapedViewerUrl}">${escapedViewerUrl}</a>.</p>
+    </main>
   </body>
 </html>`;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
 function serializeItem(item: Bot["heldItem"]): SerializableItem | null {

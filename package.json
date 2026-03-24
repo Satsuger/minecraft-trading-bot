@@ -3,23 +3,39 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "workspaces": ["libs/*"],
   "description": "Mineflayer-based starter bot for Minecraft market monitoring and semi-automation",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "start:advisor": "tsx src/advisor.ts",
-    "start:bot": "tsx src/index.ts",
-    "check": "tsc --noEmit"
+    "dev": "nx run-many -t dev --projects=backend,frontend --parallel=2",
+    "dev:backend": "nx run backend:dev",
+    "dev:frontend": "nx run frontend:dev",
+    "start:advisor": "nx run backend:advisor",
+    "start:bot": "nx run backend:dev",
+    "build": "nx run-many -t build --projects=shared,frontend,backend --parallel=3",
+    "check": "nx run-many -t typecheck --projects=shared,frontend,backend --parallel=3"
   },
   "dependencies": {
+    "@minecraft-trading-bot/shared": "file:libs/shared",
     "axios": "^0.21.4",
+    "compression": "^1.8.1",
     "dotenv": "^16.5.0",
+    "express": "^5.2.1",
     "mineflayer": "^4.24.0",
     "prismarine-viewer": "^1.33.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^4.7.0",
+    "nx": "^22.6.1",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vite": "^4.5.14"
   }
 }

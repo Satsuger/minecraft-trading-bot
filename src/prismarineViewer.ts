@@ -4,6 +4,7 @@ import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import type { Bot } from "mineflayer";
 import type { Window } from "prismarine-windows";
+import { formatMinecraftText } from "./minecraftText.js";
 
 const require = createRequire(import.meta.url);
 
@@ -766,7 +767,7 @@ function serializeWindow(window: Window | null): SerializedWindow | null {
     selectedItem: serializeItem(window.selectedItem),
     slotCount: window.slots.length,
     slots: window.slots.map((item) => serializeItem(item)),
-    title: String(window.title ?? ""),
+    title: formatMinecraftText(window.title),
     type: window.type,
   };
 }

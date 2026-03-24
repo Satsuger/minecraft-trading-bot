@@ -41,6 +41,7 @@ MC_PORT=25565
 MC_USERNAME=your_email_or_username
 MC_PASSWORD=
 MC_VERSION=
+# donutsmp.net server version is 1.21.1
 PRICE_KEYWORDS=price,sell,buy,shop,auction,market
 CHAT_COMMAND_PREFIX=!
 PRISMARINE_VIEWER_ENABLED=true

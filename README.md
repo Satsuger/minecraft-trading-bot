@@ -51,11 +51,15 @@ PRISMARINE_VIEWER_PREFIX=
 ```
 
 ## Prismarine Viewer
-When the bot spawns, it now starts a web viewer so you can inspect the world around it in real time.
+When the bot spawns, it now starts a local dashboard so you can inspect the world and the bot inventory in real time.
 
 Open:
 
 `http://localhost:3000/`
+
+Raw 3D viewer only:
+
+`http://localhost:3000/viewer/`
 
 You can change the port and route prefix with:
 - `PRISMARINE_VIEWER_PORT`

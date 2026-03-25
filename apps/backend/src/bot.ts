@@ -35,7 +35,7 @@ export class MinecraftTradingBotApp {
 
       if (!this.ordersService) return;
 
-      void this.ordersService.fetchOrders(BlockId.RedstoneBlock);
+      this.ordersService.fetchOrders(BlockId.RedstoneBlock);
     });
 
     bot.on("windowOpen", (window) => {

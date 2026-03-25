@@ -20,11 +20,13 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "build": "nx run-many -t build --projects=shared,frontend,backend --parallel=3",
-    "check": "nx run-many -t typecheck --projects=shared,frontend,backend --parallel=3"
+    "build": "nx run-many -t build --projects=constants,types,utils,frontend,backend --parallel=5",
+    "check": "nx run-many -t typecheck --projects=constants,types,utils,frontend,backend --parallel=5"
   },
   "dependencies": {
-    "@minecraft-trading-bot/shared": "file:libs/shared",
+    "@minecraft-trading-bot/constants": "file:libs/constants",
+    "@minecraft-trading-bot/types": "file:libs/types",
+    "@minecraft-trading-bot/utils": "file:libs/utils",
     "axios": "^0.21.4",
     "compression": "^1.8.1",
     "dotenv": "^16.5.0",

@@ -1,5 +1,5 @@
 import mineflayer, { type Bot } from "mineflayer";
-import { BlockId } from "@minecraft-trading-bot/shared";
+import { BlockId } from "@minecraft-trading-bot/constants";
 import { config } from "./lib/config.js";
 import { OrdersService } from "./services/orders.service.js";
 
@@ -39,11 +39,11 @@ export class MinecraftTradingBotApp {
     });
 
     bot.on("windowOpen", (window) => {
-      console.log("[bot] window opened:", window.title);
+      console.log("[bot] window opened:", window?.title);
     });
 
     bot.on("windowClose", (window) => {
-      console.log("[bot] window closed:", window.title);
+      console.log("[bot] window closed:", window?.title);
     });
 
     bot.on("kicked", (reason) => {

@@ -9,7 +9,7 @@ import type {
   InventoryStatePayload,
   SerializableItem,
   SerializedWindow,
-} from "@minecraft-trading-bot/shared";
+} from "@minecraft-trading-bot/types";
 import { formatMinecraftText } from "./minecraft-text.js";
 
 const require = createRequire(import.meta.url);

@@ -23,8 +23,7 @@
       "options": {
         "command": "tsc -p apps/backend/tsconfig.app.json",
         "cwd": "{workspaceRoot}"
-      },
-      "dependsOn": ["shared:build"]
+      }
     },
     "typecheck": {
       "executor": "nx:run-commands",

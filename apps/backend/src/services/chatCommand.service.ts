@@ -1,5 +1,5 @@
 import type { Bot } from "mineflayer";
-import type { BlockId } from "@minecraft-trading-bot/shared";
+import type { BlockId } from "@minecraft-trading-bot/constants";
 
 export interface ParsedChatCommand {
   args: string[];
@@ -45,7 +45,7 @@ export class ChatCommandService {
 
   public openOrders(blockId: BlockId) {
     const command = this.build("orders", [blockId]);
-    
+
     this.bot.chat(command);
   }
 

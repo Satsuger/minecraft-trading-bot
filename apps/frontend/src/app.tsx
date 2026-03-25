@@ -5,7 +5,7 @@ import type {
   InventoryStatePayload,
   SerializableItem,
   SerializedWindow,
-} from "@minecraft-trading-bot/shared";
+} from "@minecraft-trading-bot/types";
 
 export function App() {
   const config = getDashboardRuntimeConfig();

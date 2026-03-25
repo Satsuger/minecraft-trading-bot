@@ -6,7 +6,7 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "declaration": true,
     "emitDeclarationOnly": true,
-    "outDir": "../../dist/libs/shared",
+    "outDir": "../../dist/libs/constants",
     "rootDir": "./src"
   },
   "include": ["src/**/*.ts"]

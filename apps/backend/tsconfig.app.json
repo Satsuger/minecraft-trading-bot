@@ -6,5 +6,5 @@
     "outDir": "../../dist",
     "rootDir": "../../"
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "../../libs/shared/src/**/*.ts"]
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "../../libs/**/*.ts"]
 }

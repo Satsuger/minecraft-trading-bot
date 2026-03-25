@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "workspaces": ["libs/*"],
+  "workspaces": [
+    "libs/*"
+  ],
   "description": "Mineflayer-based starter bot for Minecraft market monitoring and semi-automation",
   "scripts": {
     "dev": "nx run-many -t dev --projects=backend,frontend --parallel=2",
@@ -11,6 +13,13 @@
     "dev:frontend": "nx run frontend:dev",
     "start:advisor": "nx run backend:advisor",
     "start:bot": "nx run backend:dev",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f postgres",
+    "db:status": "docker compose ps postgres",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
     "build": "nx run-many -t build --projects=shared,frontend,backend --parallel=3",
     "check": "nx run-many -t typecheck --projects=shared,frontend,backend --parallel=3"
   },
@@ -19,8 +28,10 @@
     "axios": "^0.21.4",
     "compression": "^1.8.1",
     "dotenv": "^16.5.0",
+    "drizzle-orm": "^0.45.1",
     "express": "^5.2.1",
     "mineflayer": "^4.24.0",
+    "pg": "^8.20.0",
     "prismarine-viewer": "^1.33.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
@@ -30,9 +41,11 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.1",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.7.0",
+    "drizzle-kit": "^0.31.10",
     "nx": "^22.6.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",

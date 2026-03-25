@@ -3,6 +3,7 @@ import { appendFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import type { Window } from "prismarine-windows";
 import { config } from "./lib/config.js";
+import { closeDatabase, connectDatabase } from "./lib/database.js";
 import { startPrismarineViewer } from "./lib/prismarine-viewer.js";
 
 const dataDir = join(process.cwd(), "data");
@@ -10,6 +11,8 @@ if (!existsSync(dataDir)) mkdirSync(dataDir, { recursive: true });
 
 const marketLogPath = join(dataDir, "market-events.ndjson");
 const windowLogPath = join(dataDir, "window.log");
+
+void connectDatabase();
 
 const bot = mineflayer.createBot({
   host: config.MC_HOST,
@@ -198,5 +201,6 @@ bot.on("error", (error) => {
 
 bot.on("end", (why) => {
   prismarineViewer?.close();
+  void closeDatabase();
   console.log("[bot] disconnected", why);
 });

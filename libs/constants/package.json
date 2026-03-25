@@ -1,5 +1,5 @@
 {
-  "name": "@minecraft-trading-bot/constants",
+  "name": "@torgash/constants",
   "version": "0.1.0",
   "private": true,
   "type": "module",

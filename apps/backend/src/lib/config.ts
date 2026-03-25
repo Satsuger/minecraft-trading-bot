@@ -41,7 +41,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().optional().default(""),
   DB_HOST: z.string().default("127.0.0.1"),
   DB_PORT: z.coerce.number().int().positive().default(5432),
-  DB_NAME: z.string().default("minecraft_trading_bot"),
+  DB_NAME: z.string().default("torgash"),
   DB_USER: z.string().default("minecraft"),
   DB_PASSWORD: z.string().default("minecraft"),
   DB_SSL: booleanString.default("false"),

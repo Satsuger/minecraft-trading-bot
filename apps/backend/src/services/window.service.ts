@@ -1,4 +1,4 @@
-import { decodeCompactNumber } from "@minecraft-trading-bot/utils";
+import { decodeCompactNumber } from "@torgash/utils";
 import type { Window } from "prismarine-windows";
 
 type WindowType = "auction" | "crafting" | "orders" | "unknown";

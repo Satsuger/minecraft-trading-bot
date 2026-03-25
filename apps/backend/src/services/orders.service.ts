@@ -1,5 +1,5 @@
 import type { Bot } from "mineflayer";
-import { BlockId } from "@minecraft-trading-bot/constants";
+import { BlockId } from "@torgash/constants";
 import { ChatCommandService } from "./chatCommand.service.js";
 import { WindowService } from "./window.service.js";
 
@@ -29,4 +29,3 @@ export class OrdersService {
     return serialized.orders
   }
 }
-

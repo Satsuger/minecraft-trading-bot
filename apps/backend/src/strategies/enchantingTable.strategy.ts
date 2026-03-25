@@ -5,7 +5,7 @@ import {
 } from "../services/task-scheduler/index.js";
 import { Strategy } from "./strategy.js";
 import { InventoryService } from "../services/inventory.service.js";
-import { ItemId } from "@minecraft-trading-bot/constants";
+import { ItemId } from "@torgash/constants";
 
 export class EnchantingTableStrategy extends Strategy {
   private readonly taskScheduler: TaskSchedulerService;

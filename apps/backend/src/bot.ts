@@ -1,5 +1,5 @@
 import mineflayer, { type Bot } from "mineflayer";
-import { BlockId } from "@minecraft-trading-bot/constants";
+import { BlockId } from "@torgash/constants";
 import { config } from "./lib/config.js";
 import { OrdersService } from "./services/orders.service.js";
 import { TaskSchedulerService } from "./services/task-scheduler/index.js";

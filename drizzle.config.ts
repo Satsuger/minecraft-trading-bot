@@ -5,7 +5,7 @@ const dbUser = process.env.DB_USER ?? "minecraft";
 const dbPassword = process.env.DB_PASSWORD ?? "minecraft";
 const dbHost = process.env.DB_HOST ?? "127.0.0.1";
 const dbPort = process.env.DB_PORT ?? "5432";
-const dbName = process.env.DB_NAME ?? "minecraft_trading_bot";
+const dbName = process.env.DB_NAME ?? "torgash";
 
 export default defineConfig({
   dialect: "postgresql",

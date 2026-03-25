@@ -1,5 +1,5 @@
 {
-  "name": "minecraft-trading-bot",
+  "name": "torgash",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -24,9 +24,9 @@
     "check": "nx run-many -t typecheck --projects=constants,types,utils,frontend,backend --parallel=5"
   },
   "dependencies": {
-    "@minecraft-trading-bot/constants": "file:libs/constants",
-    "@minecraft-trading-bot/types": "file:libs/types",
-    "@minecraft-trading-bot/utils": "file:libs/utils",
+    "@torgash/constants": "file:libs/constants",
+    "@torgash/types": "file:libs/types",
+    "@torgash/utils": "file:libs/utils",
     "axios": "^0.21.4",
     "compression": "^1.8.1",
     "dotenv": "^16.5.0",

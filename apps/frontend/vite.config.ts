@@ -22,9 +22,9 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@minecraft-trading-bot/constants": "/libs/constants/src/index.ts",
-      "@minecraft-trading-bot/types": "/libs/types/src/index.ts",
-      "@minecraft-trading-bot/utils": "/libs/utils/src/index.ts",
+      "@torgash/constants": "/libs/constants/src/index.ts",
+      "@torgash/types": "/libs/types/src/index.ts",
+      "@torgash/utils": "/libs/utils/src/index.ts",
     },
   },
 });

@@ -1,4 +1,4 @@
-# Minecraft Trading Bot
+# Torgash
 
 A Mineflayer-based trading assistant organized as an Nx monorepo.
 
@@ -99,7 +99,7 @@ DATABASE_ENABLED=true
 DATABASE_URL=
 DB_HOST=127.0.0.1
 DB_PORT=5432
-DB_NAME=minecraft_trading_bot
+DB_NAME=torgash
 DB_USER=minecraft
 DB_PASSWORD=minecraft
 DB_SSL=false

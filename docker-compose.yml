@@ -1,10 +1,10 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: minecraft-trading-bot-postgres
+    container_name: torgash-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${DB_NAME:-minecraft_trading_bot}
+      POSTGRES_DB: ${DB_NAME:-torgash}
       POSTGRES_USER: ${DB_USER:-minecraft}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-minecraft}
     ports:
@@ -15,7 +15,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${DB_USER:-minecraft} -d ${DB_NAME:-minecraft_trading_bot}"
+          "pg_isready -U ${DB_USER:-minecraft} -d ${DB_NAME:-torgash}"
         ]
       interval: 10s
       timeout: 5s

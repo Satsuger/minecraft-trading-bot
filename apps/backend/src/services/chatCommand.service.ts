@@ -1,5 +1,5 @@
 import type { Bot } from "mineflayer";
-import type { BlockId } from "@minecraft-trading-bot/constants";
+import type { BlockId } from "@torgash/constants";
 
 export interface ParsedChatCommand {
   args: string[];

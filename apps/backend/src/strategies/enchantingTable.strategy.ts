@@ -1,12 +1,20 @@
 import { Strategy } from "./strategy.js";
+import { TaskSchedulerService } from "../services/taskScheduler.service.js";
+import { Bot } from "mineflayer";
 
 export class EnchantingTableStrategy extends Strategy {
-  constructor() {
+  private readonly taskScheduler: TaskSchedulerService;
+  private readonly bot: Bot;
+
+  constructor(bot: Bot, taskScheduler: TaskSchedulerService) {
     super({
       name: "enchanting-table",
       description:
         "Buy enchanting tables from orders and resell them on auction for double the price.",
     });
+
+    this.bot = bot;
+    this.taskScheduler = taskScheduler;
   }
 
   async run(): Promise<void> {

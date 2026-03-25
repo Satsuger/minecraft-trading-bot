@@ -3,11 +3,18 @@ import { BlockId } from "@minecraft-trading-bot/constants";
 import { config } from "./lib/config.js";
 import { OrdersService } from "./services/orders.service.js";
 import { WindowService } from "./services/window.service.js";
+import { TaskSchedulerService } from "./services/taskScheduler.service.js";
+import { EnchantingTableStrategy } from "./strategies/enchantingTable.strategy.js";
 
 export class MinecraftTradingBotApp {
   private bot: Bot | null = null;
-  private ordersService: OrdersService | null = null;
-  private windowService: WindowService | null = null;
+
+  private windowService = new WindowService();
+  private taskScheduler = new TaskSchedulerService();
+
+  constructor() {
+    this.taskScheduler.stop();
+  }
 
   start(): Bot {
     if (this.bot) {
@@ -22,9 +29,6 @@ export class MinecraftTradingBotApp {
       auth: "microsoft",
     });
 
-    this.windowService = new WindowService();
-    this.ordersService = new OrdersService(this.bot);
-
     this.registerListeners(this.bot);
 
     return this.bot;
@@ -33,20 +37,20 @@ export class MinecraftTradingBotApp {
   private registerListeners(bot: Bot): void {
     bot.once("spawn", async () => {
       console.log(`[bot] spawned on ${config.MC_HOST}:${config.MC_PORT}`);
+
       await new Promise((resolve) => setTimeout(resolve, 2000));
+      this.taskScheduler.resume();
+
+      new EnchantingTableStrategy(bot, this.taskScheduler).run();
 
       console.log("[bot] semi-automation mode enabled");
-
-      if (!this.ordersService) return;
-
-      this.ordersService.fetchOrders(BlockId.RedstoneBlock);
     });
 
     bot.on("windowOpen", (window) => {
       if (!window) return;
-      
+
       console.log("[bot] window opened:", window.title);
-      
+
       this.windowService?.handleWindowOpen(window);
     });
 
@@ -64,8 +68,8 @@ export class MinecraftTradingBotApp {
 
     bot.on("end", (why) => {
       console.log("[bot] disconnected", why);
+
       this.bot = null;
-      this.ordersService = null;
     });
   }
 }

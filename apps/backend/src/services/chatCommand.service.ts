@@ -43,15 +43,19 @@ export class ChatCommandService {
     private readonly defaultPrefix = "/",
   ) {}
 
-  build(name: string, args: readonly CommandArgument[] = []): string {
+  public openOrders(blockId: BlockId) {
+    const command = this.build("orders", [blockId]);
+    
+    this.bot.chat(command);
+  }
+
+  private build(name: string, args: readonly CommandArgument[] = []): string {
     const normalizedName = name.trim();
     if (!normalizedName) {
       throw new Error("Command name cannot be empty");
     }
 
-    const prefix = normalizedName.startsWith("/")
-      ? ""
-      : this.defaultPrefix;
+    const prefix = normalizedName.startsWith("/") ? "" : this.defaultPrefix;
 
     const serializedArgs = args
       .map((argument) => quoteCommandArgument(String(argument)))
@@ -60,18 +64,6 @@ export class ChatCommandService {
     return serializedArgs
       ? `${prefix}${normalizedName} ${serializedArgs}`
       : `${prefix}${normalizedName}`;
-  }
-
-  buildOrders(blockId: BlockId): string {
-    return this.build("orders", [blockId]);
-  }
-
-  buildAuction(blockId: BlockId): string {
-    return this.build("auction", [blockId]);
-  }
-
-  buildAuctionHouseSell(price: number | string): string {
-    return this.build("ah", ["sell", price]);
   }
 
   parse(command: string): ParsedChatCommand {

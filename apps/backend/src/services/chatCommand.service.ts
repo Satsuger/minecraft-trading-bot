@@ -1,4 +1,5 @@
 import type { Bot } from "mineflayer";
+import type { BlockId } from "@minecraft-trading-bot/shared";
 
 export interface ParsedChatCommand {
   args: string[];
@@ -61,11 +62,11 @@ export class ChatCommandService {
       : `${prefix}${normalizedName}`;
   }
 
-  buildOrders(blockId: string): string {
+  buildOrders(blockId: BlockId): string {
     return this.build("orders", [blockId]);
   }
 
-  buildAuction(blockId: string): string {
+  buildAuction(blockId: BlockId): string {
     return this.build("auction", [blockId]);
   }
 

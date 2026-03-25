@@ -2,8 +2,8 @@ import { desc, sql, type InferInsertModel, type InferSelectModel } from "drizzle
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { config } from "./config.js";
-import * as schema from "./db/schema.js";
-import { trades } from "./db/schema.js";
+import * as schema from "../db/schema.js";
+import { trades } from "../db/schema.js";
 
 let databasePool: Pool | null = null;
 let database: NodePgDatabase<typeof schema> | null = null;

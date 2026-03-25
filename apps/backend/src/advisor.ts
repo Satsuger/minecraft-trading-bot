@@ -1,4 +1,4 @@
-import { OrderBlockCoupleStrategy, Strategy } from "./lib/strategies/index.js";
+import { OrderBlockCoupleStrategy, Strategy } from "./strategies/index.js";
 
 export class Advisor<TContext, TResult = void, TAggregated = TResult[]> {
   constructor(

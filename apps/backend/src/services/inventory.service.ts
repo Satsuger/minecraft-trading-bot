@@ -6,7 +6,7 @@ export interface InventoryItemSnapshot {
   count: number;
   displayName: string;
   metadata: number;
-  name: string;
+  itemId: string;
   slot: number;
   stackSize: number;
   type: number;
@@ -14,6 +14,20 @@ export interface InventoryItemSnapshot {
 
 export class InventoryService {
   constructor(private readonly bot: Bot) {}
+
+  findItemByItemId(itemId: string): InventoryItemSnapshot | null {
+    const { inventoryStart, hotbarStart, slots } = this.bot.inventory;
+    const inventoryEnd = hotbarStart + HOTBAR_SIZE;
+
+    for (let slot = inventoryStart; slot < inventoryEnd; slot += 1) {
+      const item = slots[slot];
+      if (!item || item.name !== itemId) continue;
+
+      return this.serializeItem(item);
+    }
+
+    return null;
+  }
 
   getItems(): InventoryItemSnapshot[] {
     return this.bot.inventory.items().map((item) => this.serializeItem(item));
@@ -112,10 +126,11 @@ export class InventoryService {
   private serializeItem(
     item: NonNullable<Bot["inventory"]["slots"][number]>,
   ): InventoryItemSnapshot {
+
     return {
       slot: item.slot,
       type: item.type,
-      name: item.name,
+      itemId: item.name,
       displayName: item.displayName,
       count: item.count,
       metadata: item.metadata,

@@ -4,10 +4,13 @@ import {
   TaskSchedulerService,
 } from "../services/task-scheduler/index.js";
 import { Strategy } from "./strategy.js";
+import { InventoryService } from "../services/inventory.service.js";
+import { ItemId } from "@minecraft-trading-bot/constants";
 
 export class EnchantingTableStrategy extends Strategy {
   private readonly taskScheduler: TaskSchedulerService;
   private readonly bot: Bot;
+  private readonly inventoryService: InventoryService;
 
   constructor(bot: Bot, taskScheduler: TaskSchedulerService) {
     super({
@@ -18,85 +21,15 @@ export class EnchantingTableStrategy extends Strategy {
 
     this.bot = bot;
     this.taskScheduler = taskScheduler;
+    this.inventoryService = new InventoryService(bot);
   }
 
   async run(): Promise<void> {
     this.taskScheduler.enqueueNormal({
       steps: [
         createStep(({ priority, stepIndex, taskName }) => {
-          console.log(
-            `[strategy:${this.name}] [${priority}] ${taskName} step ${stepIndex + 1}: inspecting inventory for ${this.bot.username}`,
-          );
+          this.inventoryService.findItemByItemId(ItemId.EnchantingTable);
         }),
-        createStep(({ priority, stepIndex, taskName }) => {
-          console.log(
-            `[strategy:${this.name}] [${priority}] ${taskName} step ${stepIndex + 1}: inspecting hotbar for ${this.bot.username}`,
-          );
-        }),
-      ],
-    });
-
-    this.taskScheduler.enqueueNormal({
-      name: "enchanting-table-normal-2",
-      baseDelayMs: 300,
-      randomDelayMs: 100,
-      steps: [
-        createStep(
-          ({ priority, stepIndex, taskName }) => {
-            console.log(
-              `[strategy:${this.name}] [${priority}] ${taskName} step ${stepIndex + 1}: preparing order lookup`,
-            );
-          },
-          {
-            name: "prepare-order-check",
-            baseDelay: 200,
-            randomDelay: 50,
-          },
-        ),
-        createStep(
-          ({ priority, stepIndex, taskName }) => {
-            console.log(
-              `[strategy:${this.name}] [${priority}] ${taskName} step ${stepIndex + 1}: preparing auction lookup`,
-            );
-          },
-          {
-            name: "prepare-auction-check",
-            baseDelay: 200,
-            randomDelay: 50,
-          },
-        ),
-      ],
-    });
-
-    this.taskScheduler.enqueueHigh({
-      name: "enchanting-table-high-priority",
-      baseDelayMs: 150,
-      randomDelayMs: 50,
-      steps: [
-        createStep(
-          ({ priority, stepIndex, taskName }) => {
-            console.log(
-              `[strategy:${this.name}] [${priority}] ${taskName} step ${stepIndex + 1}: handling urgent restock check`,
-            );
-          },
-          {
-            name: "handle-urgent-restock",
-            baseDelay: 100,
-            randomDelay: 25,
-          },
-        ),
-        createStep(
-          ({ priority, stepIndex, taskName }) => {
-            console.log(
-              `[strategy:${this.name}] [${priority}] ${taskName} step ${stepIndex + 1}: confirming urgent follow-up`,
-            );
-          },
-          {
-            name: "confirm-urgent-follow-up",
-            baseDelay: 100,
-            randomDelay: 25,
-          },
-        ),
       ],
     });
 

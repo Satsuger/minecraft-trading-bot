@@ -1,7 +1,6 @@
 import type { Bot } from "mineflayer";
 import { BlockId } from "@minecraft-trading-bot/constants";
 import { ChatCommandService } from "./chatCommand.service.js";
-import type { Window } from "prismarine-windows";
 import { WindowService } from "./window.service.js";
 
 export class OrdersService {
@@ -14,7 +13,7 @@ export class OrdersService {
     windowService?: WindowService,
   ) {
     this.chatCommands = chatCommands ?? new ChatCommandService(bot);
-    this.windowService = windowService ?? new WindowService(bot);
+    this.windowService = windowService ?? new WindowService();
   }
 
   async fetchOrders(blockId: BlockId) {

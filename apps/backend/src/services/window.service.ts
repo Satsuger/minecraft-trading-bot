@@ -1,4 +1,3 @@
-import type { Bot } from "mineflayer";
 import { decodeCompactNumber } from "@minecraft-trading-bot/utils";
 import type { Window } from "prismarine-windows";
 
@@ -20,11 +19,7 @@ interface PendingWindowWaiter {
 export class WindowService {
   private pending: PendingWindowWaiter[] = [];
 
-  constructor(private readonly bot: Bot) {
-    this.bot.on("windowOpen", this.handleWindowOpen.bind(this));
-  }
-
-  private handleWindowOpen(window: Window) {
+  handleWindowOpen = (window: Window) => {
     const type = this.classify(window);
 
     const event: WindowEvent = {
@@ -39,7 +34,7 @@ export class WindowService {
       this.removeWaiter(waiter.id);
       break;
     }
-  }
+  };
 
   private removeWaiter(id: string) {
     this.pending = this.pending.filter((waiter) => waiter.id !== id);

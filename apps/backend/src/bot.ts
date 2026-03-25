@@ -2,10 +2,12 @@ import mineflayer, { type Bot } from "mineflayer";
 import { BlockId } from "@minecraft-trading-bot/constants";
 import { config } from "./lib/config.js";
 import { OrdersService } from "./services/orders.service.js";
+import { WindowService } from "./services/window.service.js";
 
 export class MinecraftTradingBotApp {
   private bot: Bot | null = null;
   private ordersService: OrdersService | null = null;
+  private windowService: WindowService | null = null;
 
   start(): Bot {
     if (this.bot) {
@@ -20,7 +22,9 @@ export class MinecraftTradingBotApp {
       auth: "microsoft",
     });
 
+    this.windowService = new WindowService();
     this.ordersService = new OrdersService(this.bot);
+
     this.registerListeners(this.bot);
 
     return this.bot;
@@ -39,7 +43,11 @@ export class MinecraftTradingBotApp {
     });
 
     bot.on("windowOpen", (window) => {
-      console.log("[bot] window opened:", window?.title);
+      if (!window) return;
+      
+      console.log("[bot] window opened:", window.title);
+      
+      this.windowService?.handleWindowOpen(window);
     });
 
     bot.on("windowClose", (window) => {

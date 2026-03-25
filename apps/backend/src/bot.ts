@@ -2,8 +2,8 @@ import mineflayer, { type Bot } from "mineflayer";
 import { BlockId } from "@minecraft-trading-bot/constants";
 import { config } from "./lib/config.js";
 import { OrdersService } from "./services/orders.service.js";
+import { TaskSchedulerService } from "./services/task-scheduler/index.js";
 import { WindowService } from "./services/window.service.js";
-import { TaskSchedulerService } from "./services/taskScheduler.service.js";
 import { EnchantingTableStrategy } from "./strategies/enchantingTable.strategy.js";
 
 export class MinecraftTradingBotApp {

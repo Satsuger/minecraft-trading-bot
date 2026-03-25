@@ -1,155 +1,27 @@
-export type TaskPriority = "normal" | "high";
-export type TaskSchedulerStatus = "idle" | "running" | "stopping" | "stopped";
-export type TaskExecutionPhase = "step-delay" | "step" | "task-delay";
+import type {
+  CurrentExecutionSnapshot,
+  NormalizedTaskDefinition,
+  NormalizedTaskStep,
+  QueuedTask,
+  QueuedTaskSnapshot,
+  ScheduledTaskHandle,
+  StepDelayOptions,
+  TaskDefinition,
+  TaskExecutionPhase,
+  TaskExecutionResult,
+  TaskFailureSnapshot,
+  TaskPriority,
+  TaskSchedulerStateSnapshot,
+  TaskSchedulerStatus,
+  TaskStepExecutionContext,
+} from "./taskScheduler.types.js";
 
-export interface StepDelayOptions {
-  baseDelayMs?: number;
-  randomDelayMs?: number;
-}
-
-export interface TaskStepExecutionContext {
-  priority: TaskPriority;
-  stepIndex: number;
-  stepCount: number;
-  taskId: string;
-  taskName: string;
-}
-
-export interface TaskStep<TResult = unknown> extends StepDelayOptions {
-  name: string;
-  run(context: TaskStepExecutionContext): Promise<TResult> | TResult;
-}
-
-export interface TaskDefinition<TResult = unknown> {
-  completionBaseDelayMs?: number;
-  completionRandomDelayMs?: number;
-  metadata?: Record<string, unknown>;
-  name: string;
-  steps: readonly [TaskStep<TResult>, ...TaskStep<TResult>[]];
-}
-
-export interface QueuedTaskSnapshot {
-  enqueuedAt: string;
-  id: string;
-  name: string;
-  priority: TaskPriority;
-  stepCount: number;
-}
-
-export interface CurrentExecutionSnapshot {
-  effectiveDelayMs: number | null;
-  phase: TaskExecutionPhase;
-  priority: TaskPriority;
-  startedAt: string;
-  stepCount: number;
-  stepIndex: number;
-  stepName: string | null;
-  taskId: string;
-  taskName: string;
-}
-
-export interface LastCompletedTaskSnapshot {
-  finishedAt: string;
-  id: string;
-  name: string;
-  priority: TaskPriority;
-}
-
-export interface TaskFailureSnapshot {
-  error: unknown;
-  failedAt: string;
-  priority: TaskPriority;
-  stepIndex: number;
-  stepName: string;
-  taskId: string;
-  taskName: string;
-}
-
-export interface TaskSchedulerStateSnapshot {
-  currentExecution: CurrentExecutionSnapshot | null;
-  highPriorityQueue: QueuedTaskSnapshot[];
-  isIdle: boolean;
-  isRunning: boolean;
-  lastCompletedTask: LastCompletedTaskSnapshot | null;
-  lastFailure: TaskFailureSnapshot | null;
-  normalPriorityQueue: QueuedTaskSnapshot[];
-  status: TaskSchedulerStatus;
-  stopRequested: boolean;
-}
-
-export interface TaskExecutionResult<TResult = unknown> {
-  enqueuedAt: string;
-  finishedAt: string;
-  id: string;
-  name: string;
-  priority: TaskPriority;
-  startedAt: string;
-  stepResults: TResult[];
-}
-
-export interface ScheduledTaskHandle<TResult = unknown> {
-  completion: Promise<TaskExecutionResult<TResult>>;
-  id: string;
-  priority: TaskPriority;
-}
-
-interface QueuedTask<TResult = unknown> {
-  completion: {
-    reject: (reason?: unknown) => void;
-    resolve: (value: TaskExecutionResult<TResult>) => void;
-  };
-  definition: TaskDefinition<TResult>;
-  enqueuedAt: number;
-  id: string;
-  priority: TaskPriority;
-}
-
-export class TaskSchedulerError extends Error {
-  readonly taskId: string;
-  readonly taskName: string;
-
-  constructor(message: string, taskId: string, taskName: string) {
-    super(message);
-    this.name = "TaskSchedulerError";
-    this.taskId = taskId;
-    this.taskName = taskName;
-  }
-}
-
-export class TaskExecutionError extends TaskSchedulerError {
-  readonly cause: unknown;
-  readonly priority: TaskPriority;
-  readonly stepIndex: number;
-  readonly stepName: string;
-
-  constructor(options: {
-    cause: unknown;
-    priority: TaskPriority;
-    stepIndex: number;
-    stepName: string;
-    taskId: string;
-    taskName: string;
-  }) {
-    super(
-      `Task "${options.taskName}" failed on step ${options.stepIndex + 1} "${options.stepName}"`,
-      options.taskId,
-      options.taskName,
-    );
-
-    this.name = "TaskExecutionError";
-    this.cause = options.cause;
-    this.priority = options.priority;
-    this.stepIndex = options.stepIndex;
-    this.stepName = options.stepName;
-  }
-}
-
-export class TaskSchedulerStoppedError extends Error {
-  constructor(message = "Task scheduler stopped before the task could run") {
-    super(message);
-    this.name = "TaskSchedulerStoppedError";
-  }
-}
+const DEFAULT_TASK_NAME = "unnamed";
+const DEFAULT_STEP_NAME = "unnamed";
+const DEFAULT_TASK_BASE_DELAY_MS = 500;
+const DEFAULT_TASK_RANDOM_DELAY_MS = 200;
+const DEFAULT_STEP_BASE_DELAY_MS = 300;
+const DEFAULT_STEP_RANDOM_DELAY_MS = 100;
 
 export class TaskSchedulerService {
   private readonly highPriorityQueue: QueuedTask<any>[] = [];
@@ -159,7 +31,8 @@ export class TaskSchedulerService {
   >();
 
   private currentExecution: CurrentExecutionSnapshot | null = null;
-  private lastCompletedTask: LastCompletedTaskSnapshot | null = null;
+  private lastCompletedTask: TaskSchedulerStateSnapshot["lastCompletedTask"] =
+    null;
   private lastFailure: TaskFailureSnapshot | null = null;
   private processingPromise: Promise<void> | null = null;
   private stopRequested = false;
@@ -177,9 +50,7 @@ export class TaskSchedulerService {
   }
 
   resume(): void {
-    if (!this.stopRequested) {
-      return;
-    }
+    if (!this.stopRequested) return;
 
     this.stopRequested = false;
     this.emitStateChange();
@@ -236,9 +107,8 @@ export class TaskSchedulerService {
     definition: TaskDefinition<TResult>,
     priority: TaskPriority,
   ): ScheduledTaskHandle<TResult> {
-    this.validateTaskDefinition(definition);
-
-    const queuedTask = this.createQueuedTask(definition, priority);
+    const normalizedDefinition = this.normalizeTaskDefinition(definition);
+    const queuedTask = this.createQueuedTask(normalizedDefinition, priority);
     const targetQueue =
       priority === "high" ? this.highPriorityQueue : this.normalPriorityQueue;
 
@@ -254,7 +124,7 @@ export class TaskSchedulerService {
   }
 
   private createQueuedTask<TResult>(
-    definition: TaskDefinition<TResult>,
+    definition: NormalizedTaskDefinition<TResult>,
     priority: TaskPriority,
   ): QueuedTask<TResult> & {
     completionPromise: Promise<TaskExecutionResult<TResult>>;
@@ -282,19 +152,44 @@ export class TaskSchedulerService {
     };
   }
 
-  private validateTaskDefinition(definition: TaskDefinition): void {
-    if (!definition.name.trim()) {
-      throw new Error("Task name cannot be empty");
-    }
+  private normalizeTaskDefinition<TResult>(
+    definition: TaskDefinition<TResult>,
+  ): NormalizedTaskDefinition<TResult> {
+    const normalizedName = definition.name?.trim() || DEFAULT_TASK_NAME;
+    const normalizedDefinition: NormalizedTaskDefinition<TResult> = {
+      ...definition,
+      name: normalizedName,
+      steps: definition.steps.map((step) => this.normalizeTaskStep(step)) as [
+        NormalizedTaskStep<TResult>,
+        ...NormalizedTaskStep<TResult>[],
+      ],
+    };
 
+    this.validateTaskDefinition(normalizedDefinition);
+
+    return normalizedDefinition;
+  }
+
+  private normalizeTaskStep<TResult>(
+    step: TaskDefinition<TResult>["steps"][number],
+  ): NormalizedTaskStep<TResult> {
+    return {
+      ...step,
+      name: step.name?.trim() || DEFAULT_STEP_NAME,
+    };
+  }
+
+  private validateTaskDefinition(definition: NormalizedTaskDefinition): void {
     if (!definition.steps.length) {
-      throw new Error(`Task "${definition.name}" must contain at least one step`);
+      throw new Error(
+        `Task "${definition.name}" must contain at least one step`,
+      );
     }
 
     definition.steps.forEach((step, index) => {
-      if (!step.name.trim()) {
+      if (typeof step.run !== "function") {
         throw new Error(
-          `Task "${definition.name}" contains a step with an empty name at index ${index}`,
+          `Task "${definition.name}" contains an invalid step at index ${index}`,
         );
       }
     });
@@ -353,8 +248,8 @@ export class TaskSchedulerService {
         };
 
         const stepDelayMs = this.resolveDelay({
-          baseDelayMs: step.baseDelayMs,
-          randomDelayMs: step.randomDelayMs,
+          baseDelayMs: step.baseDelayMs ?? DEFAULT_STEP_BASE_DELAY_MS,
+          randomDelayMs: step.randomDelayMs ?? DEFAULT_STEP_RANDOM_DELAY_MS,
         });
 
         this.setCurrentExecution({
@@ -380,8 +275,9 @@ export class TaskSchedulerService {
       }
 
       const completionDelayMs = this.resolveDelay({
-        baseDelayMs: task.definition.completionBaseDelayMs,
-        randomDelayMs: task.definition.completionRandomDelayMs,
+        baseDelayMs: task.definition.baseDelayMs ?? DEFAULT_TASK_BASE_DELAY_MS,
+        randomDelayMs:
+          task.definition.randomDelayMs ?? DEFAULT_TASK_RANDOM_DELAY_MS,
       });
 
       this.setCurrentExecution({
@@ -484,7 +380,7 @@ export class TaskSchedulerService {
     }
 
     const randomOffset =
-      Math.floor(Math.random() * ((normalizedRandomDelayMs * 2) + 1)) -
+      Math.floor(Math.random() * (normalizedRandomDelayMs * 2 + 1)) -
       normalizedRandomDelayMs;
 
     return Math.max(0, normalizedBaseDelayMs + randomOffset);
@@ -514,7 +410,9 @@ export class TaskSchedulerService {
   }
 
   private hasQueuedTasks(): boolean {
-    return this.highPriorityQueue.length > 0 || this.normalPriorityQueue.length > 0;
+    return (
+      this.highPriorityQueue.length > 0 || this.normalPriorityQueue.length > 0
+    );
   }
 
   private getStatus(): TaskSchedulerStatus {
@@ -545,5 +443,52 @@ export class TaskSchedulerService {
     this.stateListeners.forEach((listener) => {
       listener(snapshot);
     });
+  }
+}
+
+export class TaskSchedulerError extends Error {
+  readonly taskId: string;
+  readonly taskName: string;
+
+  constructor(message: string, taskId: string, taskName: string) {
+    super(message);
+    this.name = "TaskSchedulerError";
+    this.taskId = taskId;
+    this.taskName = taskName;
+  }
+}
+
+export class TaskExecutionError extends TaskSchedulerError {
+  readonly cause: unknown;
+  readonly priority: TaskPriority;
+  readonly stepIndex: number;
+  readonly stepName: string;
+
+  constructor(options: {
+    cause: unknown;
+    priority: TaskPriority;
+    stepIndex: number;
+    stepName: string;
+    taskId: string;
+    taskName: string;
+  }) {
+    super(
+      `Task "${options.taskName}" failed on step ${options.stepIndex + 1} "${options.stepName}"`,
+      options.taskId,
+      options.taskName,
+    );
+
+    this.name = "TaskExecutionError";
+    this.cause = options.cause;
+    this.priority = options.priority;
+    this.stepIndex = options.stepIndex;
+    this.stepName = options.stepName;
+  }
+}
+
+export class TaskSchedulerStoppedError extends Error {
+  constructor(message = "Task scheduler stopped before the task could run") {
+    super(message);
+    this.name = "TaskSchedulerStoppedError";
   }
 }

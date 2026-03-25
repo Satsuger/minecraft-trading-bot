@@ -5,22 +5,39 @@
     "libsDir": "libs"
   },
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
     "production": [
       "default",
       "!{projectRoot}/tsconfig*.json",
       "!{projectRoot}/vite.config.ts"
     ],
-    "sharedGlobals": ["{workspaceRoot}/package.json", "{workspaceRoot}/tsconfig.base.json"]
+    "sharedGlobals": [
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/tsconfig.base.json"
+    ]
   },
   "targetDefaults": {
     "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["production", "^production"]
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ]
     },
     "typecheck": {
-      "dependsOn": ["^typecheck"],
-      "inputs": ["default", "^default"]
+      "dependsOn": [
+        "^typecheck"
+      ],
+      "inputs": [
+        "default",
+        "^default"
+      ]
     }
-  }
+  },
+  "analytics": true
 }

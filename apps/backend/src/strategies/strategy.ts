@@ -3,7 +3,7 @@ export interface StrategyOptions {
   description?: string;
 }
 
-export abstract class Strategy<TContext, TResult = void> {
+export abstract class Strategy<TResult = void> {
   readonly name: string;
   readonly description?: string;
 
@@ -12,5 +12,5 @@ export abstract class Strategy<TContext, TResult = void> {
     this.description = description;
   }
 
-  abstract run(context: TContext): Promise<TResult>;
+  abstract run(): Promise<TResult>;
 }

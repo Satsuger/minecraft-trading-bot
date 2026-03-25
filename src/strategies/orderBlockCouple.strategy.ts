@@ -33,7 +33,6 @@ export interface BlockCoupleOrder {
 }
 
 export class OrderBlockCoupleStrategy extends Strategy<
-  void,
   Record<string, BlockCoupleOrder[]>
 > {
   constructor(

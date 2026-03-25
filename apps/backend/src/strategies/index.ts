@@ -1,2 +1,2 @@
 export * from "./strategy.js";
-export * from "./order-block-couple.strategy.js";
+export * from "./enchantingTable.strategy.js";

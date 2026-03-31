@@ -41,9 +41,9 @@ export class MinecraftTradingBotApp {
       await new Promise((resolve) => setTimeout(resolve, 2000));
       this.taskScheduler.resume();
 
-      new EnchantingTableStrategy(bot, this.taskScheduler).run();
-
       console.log("[bot] semi-automation mode enabled");
+      
+      new EnchantingTableStrategy(bot, this.taskScheduler).run();
     });
 
     bot.on("windowOpen", (window) => {

@@ -49,6 +49,12 @@ export class ChatCommandService {
     this.bot.chat(command);
   }
 
+  public openAuctions(blockId: BlockId) {
+    const command = this.build("auction", [blockId]);
+
+    this.bot.chat(command);
+  }
+
   private build(name: string, args: readonly CommandArgument[] = []): string {
     const normalizedName = name.trim();
     if (!normalizedName) {

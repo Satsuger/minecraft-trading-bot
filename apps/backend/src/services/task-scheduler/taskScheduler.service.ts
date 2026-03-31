@@ -6,6 +6,7 @@ import type {
   QueuedTaskSnapshot,
   ScheduledTaskHandle,
   StepDelayOptions,
+  TaskContext,
   TaskDefinition,
   TaskExecutionPhase,
   TaskExecutionResult,
@@ -37,15 +38,15 @@ export class TaskSchedulerService {
   private processingPromise: Promise<void> | null = null;
   private stopRequested = false;
 
-  enqueueHigh<TResult>(
-    definition: TaskDefinition<TResult>,
-  ): ScheduledTaskHandle<TResult> {
+  enqueueHigh<TContext extends TaskContext = TaskContext>(
+    definition: TaskDefinition<TContext>,
+  ): ScheduledTaskHandle<TContext> {
     return this.enqueue(definition, "high");
   }
 
-  enqueueNormal<TResult>(
-    definition: TaskDefinition<TResult>,
-  ): ScheduledTaskHandle<TResult> {
+  enqueueNormal<TContext extends TaskContext = TaskContext>(
+    definition: TaskDefinition<TContext>,
+  ): ScheduledTaskHandle<TContext> {
     return this.enqueue(definition, "normal");
   }
 
@@ -103,10 +104,10 @@ export class TaskSchedulerService {
     };
   }
 
-  private enqueue<TResult>(
-    definition: TaskDefinition<TResult>,
+  private enqueue<TContext extends TaskContext>(
+    definition: TaskDefinition<TContext>,
     priority: TaskPriority,
-  ): ScheduledTaskHandle<TResult> {
+  ): ScheduledTaskHandle<TContext> {
     const normalizedDefinition = this.normalizeTaskDefinition(definition);
     const queuedTask = this.createQueuedTask(normalizedDefinition, priority);
     const targetQueue =
@@ -123,16 +124,16 @@ export class TaskSchedulerService {
     };
   }
 
-  private createQueuedTask<TResult>(
-    definition: NormalizedTaskDefinition<TResult>,
+  private createQueuedTask<TContext extends TaskContext>(
+    definition: NormalizedTaskDefinition<TContext>,
     priority: TaskPriority,
-  ): QueuedTask<TResult> & {
-    completionPromise: Promise<TaskExecutionResult<TResult>>;
+  ): QueuedTask<TContext> & {
+    completionPromise: Promise<TaskExecutionResult<TContext>>;
   } {
-    let resolveTask!: (value: TaskExecutionResult<TResult>) => void;
+    let resolveTask!: (value: TaskExecutionResult<TContext>) => void;
     let rejectTask!: (reason?: unknown) => void;
 
-    const completionPromise = new Promise<TaskExecutionResult<TResult>>(
+    const completionPromise = new Promise<TaskExecutionResult<TContext>>(
       (resolve, reject) => {
         resolveTask = resolve;
         rejectTask = reject;
@@ -143,6 +144,7 @@ export class TaskSchedulerService {
       id: crypto.randomUUID(),
       priority,
       definition,
+      context: this.createTaskContext(definition.context),
       enqueuedAt: Date.now(),
       completion: {
         resolve: resolveTask,
@@ -152,16 +154,16 @@ export class TaskSchedulerService {
     };
   }
 
-  private normalizeTaskDefinition<TResult>(
-    definition: TaskDefinition<TResult>,
-  ): NormalizedTaskDefinition<TResult> {
+  private normalizeTaskDefinition<TContext extends TaskContext>(
+    definition: TaskDefinition<TContext>,
+  ): NormalizedTaskDefinition<TContext> {
     const normalizedName = definition.name?.trim() || DEFAULT_TASK_NAME;
-    const normalizedDefinition: NormalizedTaskDefinition<TResult> = {
+    const normalizedDefinition: NormalizedTaskDefinition<TContext> = {
       ...definition,
       name: normalizedName,
       steps: definition.steps.map((step) => this.normalizeTaskStep(step)) as [
-        NormalizedTaskStep<TResult>,
-        ...NormalizedTaskStep<TResult>[],
+        NormalizedTaskStep<TContext>,
+        ...NormalizedTaskStep<TContext>[],
       ],
     };
 
@@ -170,9 +172,9 @@ export class TaskSchedulerService {
     return normalizedDefinition;
   }
 
-  private normalizeTaskStep<TResult>(
-    step: TaskDefinition<TResult>["steps"][number],
-  ): NormalizedTaskStep<TResult> {
+  private normalizeTaskStep<TContext extends TaskContext>(
+    step: TaskDefinition<TContext>["steps"][number],
+  ): NormalizedTaskStep<TContext> {
     return {
       ...step,
       name: step.name?.trim() || DEFAULT_STEP_NAME,
@@ -233,13 +235,16 @@ export class TaskSchedulerService {
     return this.highPriorityQueue.shift() ?? this.normalPriorityQueue.shift();
   }
 
-  private async executeTask<TResult>(task: QueuedTask<TResult>): Promise<void> {
+  private async executeTask<TContext extends TaskContext>(
+    task: QueuedTask<TContext>,
+  ): Promise<void> {
     const startedAt = Date.now();
-    const stepResults: TResult[] = [];
+    const stepResults: unknown[] = [];
 
     try {
       for (const [stepIndex, step] of task.definition.steps.entries()) {
-        const stepContext: TaskStepExecutionContext = {
+        const stepContext: TaskStepExecutionContext<TContext> = {
+          context: task.context,
           taskId: task.id,
           taskName: task.definition.name,
           priority: task.priority,
@@ -291,7 +296,8 @@ export class TaskSchedulerService {
       await this.wait(completionDelayMs);
 
       const finishedAt = Date.now();
-      const executionResult: TaskExecutionResult<TResult> = {
+      const executionResult: TaskExecutionResult<TContext> = {
+        context: task.context,
         id: task.id,
         name: task.definition.name,
         priority: task.priority,
@@ -394,6 +400,12 @@ export class TaskSchedulerService {
     await new Promise<void>((resolve) => {
       setTimeout(resolve, delayMs);
     });
+  }
+
+  private createTaskContext<TContext extends TaskContext>(
+    context?: TContext,
+  ): TContext {
+    return ({ ...(context ?? {}) } as TContext);
   }
 
   private clearQueuedTasks(): void {

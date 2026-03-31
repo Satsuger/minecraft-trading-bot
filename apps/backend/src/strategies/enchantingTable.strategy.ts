@@ -27,8 +27,16 @@ export class EnchantingTableStrategy extends Strategy {
   async run(): Promise<void> {
     this.taskScheduler.enqueueNormal({
       steps: [
-        createStep(({ priority, stepIndex, taskName }) => {
-          this.inventoryService.findItemByItemId(ItemId.EnchantingTable);
+        createStep(() => {
+          const enchantingTablesInInventory =
+            this.inventoryService.findItemByItemId(ItemId.EnchantingTable);
+
+          return Boolean(enchantingTablesInInventory?.count);
+        }),
+        createStep((executionContext) => {
+          if (!executionContext?.context?.enchantingTablesInInventory) {
+            return;
+          }
         }),
       ],
     });

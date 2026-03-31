@@ -1,4 +1,8 @@
-import type { TaskStep, TaskStepExecutionContext } from "./taskScheduler.types.js";
+import type {
+  TaskContext,
+  TaskStep,
+  TaskStepExecutionContext,
+} from "./taskScheduler.types.js";
 
 export interface CreateStepOptions {
   baseDelay?: number;
@@ -6,12 +10,15 @@ export interface CreateStepOptions {
   randomDelay?: number;
 }
 
-export function createStep<TResult = unknown>(
+export function createStep<
+  TResult = unknown,
+  TContext extends TaskContext = TaskContext,
+>(
   run: (
-    context: TaskStepExecutionContext,
+    context?: TaskStepExecutionContext<TContext>,
   ) => Promise<TResult> | TResult,
   options: CreateStepOptions = {},
-): TaskStep<TResult> {
+): TaskStep<TResult, TContext> {
   return {
     run,
     name: options.name,

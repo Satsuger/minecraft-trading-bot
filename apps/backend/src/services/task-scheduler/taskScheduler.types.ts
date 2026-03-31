@@ -1,13 +1,15 @@
 export type TaskPriority = "normal" | "high";
 export type TaskSchedulerStatus = "idle" | "running" | "stopping" | "stopped";
 export type TaskExecutionPhase = "step-delay" | "step" | "task-delay";
+export type TaskContext = Record<string, unknown>;
 
 export interface StepDelayOptions {
   baseDelayMs?: number;
   randomDelayMs?: number;
 }
 
-export interface TaskStepExecutionContext {
+export interface TaskStepExecutionContext<TContext extends TaskContext = TaskContext> {
+  context: TContext;
   priority: TaskPriority;
   stepIndex: number;
   stepCount: number;
@@ -15,17 +17,21 @@ export interface TaskStepExecutionContext {
   taskName: string;
 }
 
-export interface TaskStep<TResult = unknown> extends StepDelayOptions {
+export interface TaskStep<
+  TResult = unknown,
+  TContext extends TaskContext = TaskContext,
+> extends StepDelayOptions {
   name?: string;
-  run(context: TaskStepExecutionContext): Promise<TResult> | TResult;
+  run(context: TaskStepExecutionContext<TContext>): Promise<TResult> | TResult;
 }
 
-export interface TaskDefinition<TResult = unknown> {
+export interface TaskDefinition<TContext extends TaskContext = TaskContext> {
   baseDelayMs?: number;
+  context?: TContext;
   randomDelayMs?: number;
   metadata?: Record<string, unknown>;
   name?: string;
-  steps: readonly [TaskStep<TResult>, ...TaskStep<TResult>[]];
+  steps: readonly [TaskStep<any, TContext>, ...TaskStep<any, TContext>[]];
 }
 
 export interface QueuedTaskSnapshot {
@@ -77,39 +83,44 @@ export interface TaskSchedulerStateSnapshot {
   stopRequested: boolean;
 }
 
-export interface TaskExecutionResult<TResult = unknown> {
+export interface TaskExecutionResult<TContext extends TaskContext = TaskContext> {
+  context: TContext;
   enqueuedAt: string;
   finishedAt: string;
   id: string;
   name: string;
   priority: TaskPriority;
   startedAt: string;
-  stepResults: TResult[];
+  stepResults: unknown[];
 }
 
-export interface ScheduledTaskHandle<TResult = unknown> {
-  completion: Promise<TaskExecutionResult<TResult>>;
+export interface ScheduledTaskHandle<TContext extends TaskContext = TaskContext> {
+  completion: Promise<TaskExecutionResult<TContext>>;
   id: string;
   priority: TaskPriority;
 }
 
-export interface NormalizedTaskDefinition<TResult = unknown>
-  extends Omit<TaskDefinition<TResult>, "name" | "steps"> {
+export interface NormalizedTaskDefinition<TContext extends TaskContext = TaskContext>
+  extends Omit<TaskDefinition<TContext>, "name" | "steps"> {
   name: string;
-  steps: readonly [NormalizedTaskStep<TResult>, ...NormalizedTaskStep<TResult>[]];
+  steps: readonly [
+    NormalizedTaskStep<TContext>,
+    ...NormalizedTaskStep<TContext>[],
+  ];
 }
 
-export interface NormalizedTaskStep<TResult = unknown>
-  extends Omit<TaskStep<TResult>, "name"> {
+export interface NormalizedTaskStep<TContext extends TaskContext = TaskContext>
+  extends Omit<TaskStep<any, TContext>, "name"> {
   name: string;
 }
 
-export interface QueuedTask<TResult = unknown> {
+export interface QueuedTask<TContext extends TaskContext = TaskContext> {
   completion: {
     reject: (reason?: unknown) => void;
-    resolve: (value: TaskExecutionResult<TResult>) => void;
+    resolve: (value: TaskExecutionResult<TContext>) => void;
   };
-  definition: NormalizedTaskDefinition<TResult>;
+  context: TContext;
+  definition: NormalizedTaskDefinition<TContext>;
   enqueuedAt: number;
   id: string;
   priority: TaskPriority;
